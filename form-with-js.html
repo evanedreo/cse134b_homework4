@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Contact Form (With JS) - Evan's Portfolio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Custom font and global stylesheet -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="alternate" href="index.html" title="Home" type="text/html">
+    <link rel="icon" href="assets/images/profile.png" type="image/png">
+  </head>
+
+  <body>
+    <noscript>Please enable Javascript to access the best experience</noscript>
+
+    <header>
+      <nav aria-label="Primary">
+        <details class="nav-menu">
+          <summary aria-label="Toggle navigation">Menu</summary>
+          <pill-nav>
+            <a href="index.html">Home</a>
+            <a href="experiences.html">Experiences</a>
+            <a href="projects.html">Projects</a>
+            <a href="form-with-js.html" aria-current="page">Contact</a>
+          </pill-nav>
+        </details>
+        <pill-nav class="nav-inline">
+          <a href="index.html">Home</a>
+          <a href="experiences.html">Experiences</a>
+          <a href="projects.html">Projects</a>
+          <a href="form-with-js.html" aria-current="page">Contact</a>
+        </pill-nav>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Contact -->
+      <section id="contact" aria-labelledby="contact-title">
+        <h2 id="contact-title">Contact</h2>
+
+        <form action="https://httpbin.org/post" method="post" novalidate>
+          <fieldset>
+            <legend>Contact Form (No JavaScript)</legend>
+
+            <label for="name">
+              Name <span aria-hidden="true">*</span>
+            </label>
+            <input id="name" name="name" type="text" autocomplete="name" required minlength="2" maxlength="60" pattern="^[A-Za-z ,.'-]+$">
+
+            <label for="email">
+              Email <span aria-hidden="true">*</span>
+            </label>
+            <input id="email" name="email" type="email" autocomplete="email" required maxlength="80">
+
+            <label for="subject">Subject</label>
+            <input id="subject" name="subject" type="text" autocomplete="off" maxlength="100" pattern="^[A-Za-z0-9 ,.'?!-]*$">
+
+            <label for="comments">
+              Comments <span aria-hidden="true">*</span>
+            </label>
+            <textarea id="comments" name="comments" rows="5" required minlength="5" maxlength="500">This is a test!</textarea>
+
+            <p id="comments-counter" class="helper-text" aria-live="polite"></p>
+
+            <input type="hidden" name="possible_bot" value="true">
+            <input type="hidden" name="form-errors" id="form-errors">
+
+            <button type="submit">Send</button>
+
+            <output id="error-output" aria-live="polite"></output>
+            <output id="info-output" aria-live="polite"></output>
+          </fieldset>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <nav aria-label="Footer">
+        <ul>
+        </ul>
+      </nav>
+      <small>&copy; <span>2025</span> Evan Edreo Honggo Widjojo</small>
+    </footer>
+    <script>
+      (function () {
+        const form = document.querySelector("#contact form");
+        if (!form) return;
+
+        const nameField = document.getElementById("name");
+        const emailField = document.getElementById("email");
+        const subjectField = document.getElementById("subject");
+        const commentsField = document.getElementById("comments");
+        const errorOutput = document.getElementById("error-output");
+        const infoOutput = document.getElementById("info-output");
+        const commentsCounter = document.getElementById("comments-counter");
+        const errorsHidden = document.getElementById("form-errors");
+
+        /** Array of error objects to be JSON-encoded and sent with the form */
+        const form_errors = [];
+
+        function updateCommentsCounter() {
+          if (!commentsField || !commentsCounter) return;
+          const max = commentsField.maxLength > 0 ? commentsField.maxLength : 500;
+          const remaining = max - commentsField.value.length;
+          commentsCounter.textContent = remaining + " characters remaining";
+          commentsCounter.classList.toggle("warning", remaining <= 50);
+        }
+
+        if (commentsField) {
+          updateCommentsCounter();
+          commentsField.addEventListener("input", updateCommentsCounter);
+          commentsField.addEventListener("focus", () => {
+            if (infoOutput) {
+              infoOutput.textContent =
+                "You can write up to " + commentsField.maxLength + " characters in your message.";
+            }
+          });
+        }
+
+        function flashIllegal(field, message) {
+          if (!field || !errorOutput) return;
+          field.classList.add("field-flash");
+          errorOutput.textContent = message;
+
+          const timeout = 1500;
+          window.setTimeout(() => {
+            field.classList.remove("field-flash");
+            if (errorOutput.textContent === message) {
+              errorOutput.textContent = "";
+            }
+          }, timeout);
+        }
+
+        function setupPatternGuard(field, message) {
+          if (!field || !field.pattern) return;
+          const pattern = new RegExp(field.pattern);
+
+          field.addEventListener("input", () => {
+            const value = field.value;
+            if (!value) return;
+            if (pattern.test(value)) return;
+
+            // Last typed character violated the pattern – remove it and alert user.
+            field.value = value.slice(0, -1);
+            flashIllegal(field, message);
+          });
+        }
+
+        setupPatternGuard(
+          nameField,
+          "Name can only contain letters, spaces, commas, periods, apostrophes, and hyphens."
+        );
+        setupPatternGuard(
+          subjectField,
+          "Subject can only contain letters, numbers, spaces, and basic punctuation."
+        );
+
+        function describeError(field) {
+          const v = field.validity;
+
+          if (v.valueMissing) {
+            return "Please fill out the " + field.name + " field.";
+          }
+          if (field.type === "email" && v.typeMismatch) {
+            return "Please enter a valid email address (for example, name@example.com).";
+          }
+          if (v.tooShort) {
+            return (
+              field.name +
+              " must be at least " +
+              field.minLength +
+              " characters long."
+            );
+          }
+          if (v.tooLong) {
+            return (
+              field.name +
+              " must be at most " +
+              field.maxLength +
+              " characters long."
+            );
+          }
+          if (v.patternMismatch) {
+            return (
+              "The " +
+              field.name +
+              " field contains characters that are not allowed."
+            );
+          }
+          return "There is a problem with the " + field.name + " field.";
+        }
+
+        form.addEventListener("submit", (event) => {
+          if (errorOutput) errorOutput.textContent = "";
+          if (infoOutput) infoOutput.textContent = "";
+
+          const fields = [nameField, emailField, subjectField, commentsField];
+          const errorsThisAttempt = [];
+
+          fields.forEach((field) => {
+            if (!field) return;
+            field.setCustomValidity("");
+            if (!field.checkValidity()) {
+              const message = describeError(field);
+              field.setCustomValidity(message);
+              errorsThisAttempt.push({
+                field: field.name,
+                value: field.value,
+                message,
+                time: new Date().toISOString(),
+              });
+            }
+          });
+
+          if (errorsThisAttempt.length > 0) {
+            event.preventDefault();
+
+            form_errors.push(...errorsThisAttempt);
+
+            if (errorsHidden) {
+              errorsHidden.value = JSON.stringify(form_errors);
+            }
+            if (errorOutput) {
+              errorOutput.textContent = errorsThisAttempt
+                .map((e) => e.field + ": " + e.message)
+                .join(" ");
+            }
+
+            form.reportValidity();
+          } else {
+            if (errorsHidden) {
+              errorsHidden.value = JSON.stringify(form_errors);
+            }
+            if (infoOutput) {
+              infoOutput.textContent =
+                "Thanks! Your message is being submitted.";
+            }
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
