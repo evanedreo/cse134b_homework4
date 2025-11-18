@@ -17,12 +17,35 @@
   --space-4: 2rem;
   --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.05), 0 2px 8px rgb(0 0 0 / 0.06);
 
-  /* Colors using light-dark() and fallbacks via var(..., fallback) */
+  /* Font stacks */
+  --font-sans: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-serif: "Georgia", "Times New Roman", serif;
+  --font-mono: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-body: var(--font-sans);
+
+  /* Colors using light-dark() as a baseline; JS may override these via custom themes */
   --surface: light-dark(hsl(var(--brand-hue) 30% 99%), hsl(var(--brand-hue) 20% 8%));
   --surface-2: light-dark(hsl(var(--brand-hue) 30% 97%), hsl(var(--brand-hue) 20% 12%));
   --text: light-dark(hsl(var(--brand-hue) 30% 10%), hsl(var(--brand-hue) 30% 90%));
   --muted: light-dark(hsl(var(--brand-hue) 20% 40% / 0.6), hsl(var(--brand-hue) 25% 80% / 0.6));
   --accent: hsl(var(--brand-hue) 90% 55%);
+}
+
+/* Explicit theme overrides controlled by JS via data-theme */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --surface: hsl(var(--brand-hue) 30% 99%);
+  --surface-2: hsl(var(--brand-hue) 30% 97%);
+  --text: hsl(var(--brand-hue) 30% 10%);
+  --muted: hsl(var(--brand-hue) 20% 40% / 0.6);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: hsl(var(--brand-hue) 20% 8%);
+  --surface-2: hsl(var(--brand-hue) 20% 12%);
+  --text: hsl(var(--brand-hue) 30% 90%);
+  --muted: hsl(var(--brand-hue) 25% 80% / 0.6);
 }
 
 /* Wider gamut accent (extra credit). Browsers will fall back to sRGB if needed. */
@@ -32,12 +55,37 @@
 
 /* Base elements */
 html {
-  font-family: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: clamp(16px, 1.2vw + 0.5rem, 18px);
   line-height: 1.6;
   scrollbar-gutter: stable; /* Baseline 2024 */
   /* Polished scrollbar color (Baseline 2024) */
   scrollbar-color: color-mix(in oklab, var(--accent), transparent 65%) transparent;
+}
+
+/* View Transition for smooth page changes (SPA-style) */
+@supports (view-transition-name: slide-page) {
+  main {
+    view-transition-name: slide-page;
+  }
+
+  ::view-transition-old(slide-page) {
+    animation: page-slide-out 350ms ease-in-out forwards;
+  }
+
+  ::view-transition-new(slide-page) {
+    animation: page-slide-in 350ms ease-in-out forwards;
+  }
+
+  @keyframes page-slide-out {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(-40px); }
+  }
+
+  @keyframes page-slide-in {
+    from { opacity: 0; transform: translateX(40px); }
+    to   { opacity: 1; transform: 0 0; }
+  }
 }
 
 body {
@@ -91,6 +139,35 @@ header {
   --nav-h: clamp(56px, 8vh, 96px);
 }
 
+/* Primary nav layout with theme select */
+nav[aria-label="Primary"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.theme-select[hidden] {
+  display: none;
+}
+
+.theme-select {
+  margin-inline-start: auto; /* push to right within the nav row */
+  border-radius: 999px;
+  padding: 0.35em 0.9em;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid color-mix(in oklab, var(--text), transparent 75%);
+  font: inherit;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+}
+
+.theme-select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
  
 
 nav pill-nav, /* custom element as descendant of nav */ pill-nav {
@@ -123,6 +200,11 @@ pill-nav {
     background: hsl(from var(--accent) h s calc(l + 5%));
     border-color: color-mix(in oklab, var(--accent), black 20%);
   }
+}
+
+:root[data-theme="dark"] pill-nav a[aria-current="page"],
+:root[data-theme="ocean"] pill-nav a[aria-current="page"] {
+  color: #fff;
 }
 
 /* Use :has() to highlight nav container when a current page link exists (extra credit) */

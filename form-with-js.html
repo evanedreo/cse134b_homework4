@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="alternate" href="index.html" title="Home" type="text/html">
     <link rel="icon" href="assets/images/profile.png" type="image/png">
+    <script src="theme-toggle.js" defer></script>
   </head>
 
   <body>
@@ -18,20 +19,28 @@
 
     <header>
       <nav aria-label="Primary">
+        <select class="theme-select" aria-label="Theme" hidden>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="ocean">Ocean</option>
+          <option value="forest">Forest</option>
+        </select>
         <details class="nav-menu">
           <summary aria-label="Toggle navigation">Menu</summary>
           <pill-nav>
             <a href="index.html">Home</a>
             <a href="experiences.html">Experiences</a>
             <a href="projects.html">Projects</a>
-            <a href="form-with-js.html" aria-current="page">Contact</a>
+            <a href="form-no-js.html">Contact (No JS)</a>
+            <a href="form-with-js.html" aria-current="page">Contact (JS)</a>
           </pill-nav>
         </details>
         <pill-nav class="nav-inline">
           <a href="index.html">Home</a>
           <a href="experiences.html">Experiences</a>
           <a href="projects.html">Projects</a>
-          <a href="form-with-js.html" aria-current="page">Contact</a>
+          <a href="form-no-js.html">Contact (No JS)</a>
+          <a href="form-with-js.html" aria-current="page">Contact (JS)</a>
         </pill-nav>
       </nav>
     </header>
